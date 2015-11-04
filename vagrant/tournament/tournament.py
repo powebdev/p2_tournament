@@ -76,7 +76,7 @@ def playerStandings():
         SELECT win_count.id, win_count.name, wins, number_of_matches
         FROM win_count LEFT JOIN match_count
         ON win_count.id=match_count.id
-        ORDER BY wins;
+        ORDER BY wins DESC;
         """)
     query_results = DB_cursor.fetchall()
     player_list = []
@@ -117,19 +117,50 @@ def swissPairings():
         id2: the second player's unique id
         name2: the second player's name
     """
+
     DB_connection = connect()
     DB_cursor = DB_connection.cursor()
-    DB_cursor.execute(
-        """
-        SELECT win_count.id, win_count.name FROM win_count ORDER BY wins DESC;
-        """)
+    number_of_players = countPlayers()
+
+    if(number_of_players % 2 == 0):
+        DB_cursor.execute(
+            """
+            SELECT id, name
+            FROM win_count ORDER BY wins DESC;
+            """)
+    else:
+        # this path takes care of tournaments with odd number of players
+        DB_cursor.execute(
+            """
+            SELECT id, name
+            FROM player_for_bye;
+            """)
+        # this player gets a bye for this round
+        odd_player = DB_cursor.fetchone()
+
+        DB_cursor.execute(
+            """
+            SELECT id, name
+            FROM players_not_for_bye ORDER BY wins DESC;
+            """)
+
     more_results = True
     result_list = []
+
     while(more_results):
         query_results = DB_cursor.fetchmany(2)
         if len(query_results) == 2:
             result_list.append(query_results[0] + query_results[1])
         else:
             more_results = False
+    if(number_of_players % 2 != 0):
+        odd_id = odd_player[0]
+        DB_cursor.execute(
+            """
+            UPDATE players SET bye=least_bye FROM
+            (SELECT min(bye)+1 AS least_bye FROM win_count) AS subq WHERE id=%s
+            """, (str(odd_id),))
+        DB_connection.commit()
+
     DB_connection.close()
     return result_list
