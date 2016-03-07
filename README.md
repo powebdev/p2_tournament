@@ -1,7 +1,9 @@
 # p2_tournament
 Project 2(Tournament Rsults) for Udacity Full Stack Web Dev Nanodegree
 
-Requirement
+Developed a database schema to store the game matches between players with a Python module to rank the players and pair them up in matches in a tournament.
+
+Required sofeware
 -----------------------------------------------------------------------------
 <a href='https://www.python.org/'>python 2.x</a></br>
 <a href='http://www.postgresql.org/'>PostgreSQL</a></br></br>
